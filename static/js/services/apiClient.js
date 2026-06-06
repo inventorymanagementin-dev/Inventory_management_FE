@@ -1,7 +1,7 @@
 import axios from 'https://cdn.jsdelivr.net/npm/axios@1.6.2/+esm';
 
 // Get base URL. Read from global variable set by config.js
-const API_BASE_URL = window.API_BASE_URL || 'https://inventory-management-fe.onrender.com/api';
+const API_BASE_URL = window.API_BASE_URL || 'http://10.227.56.251:5000/api';
 window.API_BASE_URL = API_BASE_URL;
 
 const apiClient = axios.create({

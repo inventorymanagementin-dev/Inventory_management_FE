@@ -22,13 +22,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-4y3rwcq$+mt&iau04du!(9s@6&y!kk9btg$0x2jd56l$7qajqs'
 
+import mimetypes
+mimetypes.add_type("application/javascript", ".js", True)
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     ".onrender.com",
     "inventorymanagement.site",
-    "www.inventorymanagement.site"
+    "www.inventorymanagement.site",
+    "127.0.0.1",
+    "localhost",
+    "10.227.56.251"
 ]
 
 
