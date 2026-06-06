@@ -300,11 +300,11 @@
                         const data = await response.json();
                         
                         if (!response.ok || !data.success) {
-                            throw new Error(data.error || 'Login failed');
+                            throw new Error(data.message || 'Login failed');
                         }
                         
-                        localStorage.setItem('token', data.data.token);
-                        localStorage.setItem('user', JSON.stringify({ id: data.data._id, name: data.data.name, email: data.data.email, role: data.data.role }));
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify({ id: data.user._id, name: data.user.name, email: data.user.email, role: data.user.role }));
                         
                         window.location.href = '/';
                     } catch (error) {
@@ -329,11 +329,11 @@
                         const data = await response.json();
                         
                         if (!response.ok || !data.success) {
-                            throw new Error(data.error || 'Registration failed');
+                            throw new Error(data.message || 'Registration failed');
                         }
                         
-                        localStorage.setItem('token', data.data.token);
-                        localStorage.setItem('user', JSON.stringify({ id: data.data._id, name: data.data.name, email: data.data.email }));
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify({ id: data.user._id, name: data.user.name, email: data.user.email }));
                         
                         window.location.href = '/';
                     } catch (error) {
