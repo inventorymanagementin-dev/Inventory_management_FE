@@ -1,8 +1,7 @@
 import axios from 'https://cdn.jsdelivr.net/npm/axios@1.6.2/+esm';
 
-// Get base URL. For static files served from Django, process.env is not available.
-// We can hardcode it or read it from a global variable set in base.html.
-const API_BASE_URL = window.API_BASE_URL || 'http://10.227.56.251:5000/api';
+// Get base URL. Read from global variable set by config.js
+const API_BASE_URL = window.API_BASE_URL || 'https://inventory-management-api.onrender.com/api';
 window.API_BASE_URL = API_BASE_URL;
 
 const apiClient = axios.create({

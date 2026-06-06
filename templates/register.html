@@ -247,6 +247,7 @@
         </div>
     </div>
 
+    <script src="/static/js/config.js"></script>
     <script src="/static/js/services/apiClient.js"></script>
     <script>
         function authForm() {
@@ -289,7 +290,7 @@
                     this.loginError = '';
                     
                     try {
-                        const API_BASE_URL = window.API_BASE_URL || 'http://10.227.56.251:5000/api';
+                        const API_BASE_URL = window.API_BASE_URL;
                         const response = await fetch(`${API_BASE_URL}/auth/login`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -318,7 +319,7 @@
                     this.registerError = '';
                     
                     try {
-                        const API_BASE_URL = window.API_BASE_URL || 'http://10.227.56.251:5000/api';
+                        const API_BASE_URL = window.API_BASE_URL;
                         const response = await fetch(`${API_BASE_URL}/auth/register`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
