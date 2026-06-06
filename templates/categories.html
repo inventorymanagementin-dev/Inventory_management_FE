@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories | Inventory Management System{% endblock %}
+{% block page_title %}Categories Management{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden" x-data="categoriesApp()" x-init="initData()">
+    
+    <!-- Header Actions -->
+    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        
+        <!-- Search -->
+        <div class="flex flex-1 items-center gap-3">
+            <div class="relative max-w-md w-full">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </span>
+                <input type="text" x-model="searchQuery" class="w-full py-2 pl-10 pr-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:border-primary dark:focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-white transition-all shadow-sm placeholder-slate-400 dark:placeholder-slate-500" placeholder="Search categories...">
+            </div>
+        </div>
+
+        <!-- Add Button -->
+        <button @click="showAddCategoryModal = true" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all shadow-lg shadow-primary/30 transform hover:-translate-y-0.5">
+            <svg class="w-5 h-5 mr-1.5 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+            Add Category
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div x-show="loading" class="px-6 py-12 text-center" x-cloak>
+        <svg class="animate-spin w-8 h-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto" x-show="!loading" x-cloak>
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
+                    <th class="px-6 py-4 font-semibold">Category Name</th>
+                    <th class="px-6 py-4 font-semibold">Description</th>
+                    <th class="px-6 py-4 font-semibold">Status</th>
+                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <template x-for="category in filteredCategories" :key="category._id || category.id">
+                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 flex-shrink-0 bg-primary/10 dark:bg-primary/20 text-primary rounded-lg flex items-center justify-center font-bold" x-text="category.name.charAt(0).toUpperCase()">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-slate-900 dark:text-white" x-text="category.name"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400" x-text="category.description"></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success border border-success/20">Active</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end gap-2 transition-opacity">
+                                <button x-show="user.role === 'admin'" @click="deleteCategory(category._id || category.id)" class="p-1.5 text-slate-400 hover:text-danger hover:bg-danger/10 dark:hover:bg-danger/20 rounded-lg transition-colors" title="Delete">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+                <tr x-show="filteredCategories.length === 0" x-cloak>
+                    <td colspan="4" class="px-6 py-4 text-center text-slate-500 dark:text-slate-400">No categories found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div x-show="showAddCategoryModal" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <!-- Modal backdrop -->
+            <div x-show="showAddCategoryModal" 
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="showAddCategoryModal = false"></div>
+
+            <!-- Modal panel -->
+            <div x-show="showAddCategoryModal" 
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block w-full max-w-md text-left align-bottom transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-2xl sm:my-8 sm:align-middle overflow-hidden border border-slate-200 dark:border-slate-700">
+                
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Add New Category</h3>
+                    <button @click="showAddCategoryModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                
+                <form @submit.prevent="createCategory">
+                    <div class="p-6 space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category Name</label>
+                            <input type="text" x-model="formData.name" required class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-colors placeholder-slate-400 dark:placeholder-slate-500" placeholder="e.g. Keyboards">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                            <textarea x-model="formData.description" rows="3" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-colors placeholder-slate-400 dark:placeholder-slate-500" placeholder="Brief description of the category..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 rounded-b-2xl">
+                        <button @click="showAddCategoryModal = false" type="button" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors shadow-sm">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-xl hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all shadow-lg shadow-primary/30" :disabled="submitting" x-text="submitting ? 'Saving...' : 'Save Category'">
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('categoriesApp', () => ({
+            categories: [],
+            searchQuery: '',
+            loading: true,
+            submitting: false,
+            showAddCategoryModal: false,
+            formData: {
+                name: '',
+                description: ''
+            },
+
+            categoryService: null,
+
+            async initData() {
+                try {
+                    this.loading = true;
+                    const services = await import('/static/js/services/index.js');
+                    this.categoryService = services.categoryService;
+                    const res = await this.categoryService.getAll();
+                    this.categories = res.data || [];
+                } catch (error) {
+                    console.error('Failed to load categories:', error);
+                    alert('Error loading categories: ' + error.message);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            get filteredCategories() {
+                if (!this.searchQuery) return this.categories;
+                const query = this.searchQuery.toLowerCase();
+                return this.categories.filter(c => c.name.toLowerCase().includes(query));
+            },
+
+            async createCategory() {
+                try {
+                    this.submitting = true;
+                    const res = await this.categoryService.create(this.formData);
+                    const newCategory = res.data || res;
+                    this.categories.push(newCategory);
+                    this.showAddCategoryModal = false;
+                    this.formData = { name: '', description: '' };
+                    alert('Category created successfully!');
+                } catch (error) {
+                    alert('Failed to create category: ' + error.message);
+                } finally {
+                    this.submitting = false;
+                }
+            },
+
+            async deleteCategory(id) {
+                if (!confirm('Are you sure you want to delete this category?')) return;
+                try {
+                    await this.categoryService.delete(id);
+                    this.categories = this.categories.filter(c => (c._id || c.id) !== id);
+                } catch (error) {
+                    alert('Failed to delete category: ' + error.message);
+                }
+            }
+        }));
+    });
+</script>
+{% endblock %}

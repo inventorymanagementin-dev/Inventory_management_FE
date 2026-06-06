@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports | Inventory Management System{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="reportsApp()" x-init="initData()" x-cloak>
+    
+    <!-- Loading Overlay -->
+    <div x-show="loading" class="fixed inset-0 bg-white/50 dark:bg-slate-900/50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 class="text-xl font-bold text-slate-800 dark:text-white">Inventory Summary</h2>
+        <div class="flex items-center gap-3">
+            <button @click="exportPDF()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+                <svg class="w-5 h-5 mr-2 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Export PDF
+            </button>
+            <button @click="exportExcel()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+                <svg class="w-5 h-5 mr-2 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Export Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <!-- Total Inventory Value -->
+        <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group hover:shadow-lg transition-all">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Inventory Value</p>
+                    <h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-1" x-text="formatCurrency(totalInventoryValue)">$0.00</h3>
+                </div>
+                <div class="p-3 bg-primary/10 dark:bg-primary/20 rounded-xl text-primary">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Received (This Month) -->
+        <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group hover:shadow-lg transition-all">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-success/5 dark:bg-success/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Stock Received (This Month)</p>
+                    <h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-1" x-text="stockReceivedThisMonth.toLocaleString()">0</h3>
+                </div>
+                <div class="p-3 bg-success/10 dark:bg-success/20 rounded-xl text-success">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11l7-7 7 7M5 19l7-7 7 7" /></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Dispatched (This Month) -->
+        <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group hover:shadow-lg transition-all">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-danger/5 dark:bg-danger/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Stock Dispatched (This Month)</p>
+                    <h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-1" x-text="stockDispatchedThisMonth.toLocaleString()">0</h3>
+                </div>
+                <div class="p-3 bg-danger/10 dark:bg-danger/20 rounded-xl text-danger">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" /></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Top Selling Products -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Most Dispatched Products</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
+                            <th class="px-6 py-4 font-semibold">Product</th>
+                            <th class="px-6 py-4 font-semibold">Qty Out</th>
+                            <th class="px-6 py-4 font-semibold">Current Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <template x-for="item in mostDispatchedProducts" :key="item.id">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-slate-900 dark:text-white" x-text="item.name"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-300" x-text="item.qtyOut"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" :class="item.currentStock <= 0 ? 'text-danger' : 'text-slate-600 dark:text-slate-400'" x-text="item.currentStock"></td>
+                            </tr>
+                        </template>
+                        <template x-if="mostDispatchedProducts.length === 0">
+                            <tr>
+                                <td colspan="3" class="px-6 py-4 text-center text-slate-500 dark:text-slate-400">No data available yet.</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Critical Low Stock -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-danger/5 dark:bg-danger/10">
+                <h3 class="text-lg font-semibold text-danger">Critical Low Stock</h3>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-danger text-white" x-text="criticalLowStock.length + ' Items'"></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
+                            <th class="px-6 py-4 font-semibold">Product</th>
+                            <th class="px-6 py-4 font-semibold">Supplier</th>
+                            <th class="px-6 py-4 font-semibold text-right">Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <template x-for="product in criticalLowStock" :key="product._id || product.id">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-slate-900 dark:text-white" x-text="product.name"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400" x-text="product.supplier_id?.name || '-'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold" :class="product.quantity_in_stock <= 0 ? 'text-danger' : 'text-warning'" x-text="product.quantity_in_stock"></td>
+                            </tr>
+                        </template>
+                        <template x-if="criticalLowStock.length === 0">
+                            <tr>
+                                <td colspan="3" class="px-6 py-4 text-center text-success font-medium">All stock levels are healthy.</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                <a href="{% url 'suppliers' %}" class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-danger bg-danger/10 border border-danger/20 rounded-xl hover:bg-danger hover:text-white transition-all">
+                    Contact Suppliers
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('reportsApp', () => ({
+            loading: true,
+            products: [],
+            transactions: [],
+            
+            totalInventoryValue: 0,
+            stockReceivedThisMonth: 0,
+            stockDispatchedThisMonth: 0,
+            mostDispatchedProducts: [],
+            criticalLowStock: [],
+
+            async initData() {
+                try {
+                    this.loading = true;
+                    const services = await import('/static/js/services/index.js');
+                    
+                    const [productsRes, transactionsRes] = await Promise.all([
+                        services.productService.getAll(),
+                        services.transactionService.getAll()
+                    ]);
+
+                    this.products = productsRes.data || [];
+                    this.transactions = transactionsRes.data || [];
+
+                    this.calculateMetrics();
+
+                } catch (error) {
+                    console.error('Failed to load data for reports:', error);
+                    alert('Error loading reports data: ' + error.message);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            calculateMetrics() {
+                // Total Inventory Value
+                this.totalInventoryValue = this.products.reduce((sum, p) => {
+                    const price = parseFloat(p.unit_price) || 0;
+                    const qty = parseInt(p.quantity_in_stock) || 0;
+                    return sum + (price * qty);
+                }, 0);
+
+                // This Month Date filtering
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                let received = 0;
+                let dispatched = 0;
+                
+                // Track dispatched quantities per product
+                const dispatchMap = {};
+
+                this.transactions.forEach(txn => {
+                    const txnDate = new Date(txn.date);
+                    if (txnDate >= startOfMonth) {
+                        const qty = parseInt(txn.quantity) || 0;
+                        if (txn.transaction_type === 'IN') {
+                            received += qty;
+                        } else if (txn.transaction_type === 'OUT') {
+                            dispatched += qty;
+                        }
+                    }
+
+                    // For 'Most Dispatched', we can use all-time or this month. Let's use all-time to be comprehensive.
+                    if (txn.transaction_type === 'OUT') {
+                        const prodId = txn.product_id?._id || txn.product_id?.id || txn.product_id;
+                        if (!prodId) return;
+                        if (!dispatchMap[prodId]) {
+                            dispatchMap[prodId] = {
+                                id: prodId,
+                                name: txn.product_id?.name || 'Unknown',
+                                qtyOut: 0,
+                                currentStock: 0
+                            };
+                        }
+                        dispatchMap[prodId].qtyOut += (parseInt(txn.quantity) || 0);
+                    }
+                });
+
+                this.stockReceivedThisMonth = received;
+                this.stockDispatchedThisMonth = dispatched;
+
+                // Sync current stock for dispatchMap
+                this.products.forEach(p => {
+                    const id = p._id || p.id;
+                    if (dispatchMap[id]) {
+                        dispatchMap[id].currentStock = p.quantity_in_stock;
+                        // update name just in case
+                        dispatchMap[id].name = p.name;
+                    }
+                });
+
+                // Sort and get top 5 dispatched
+                this.mostDispatchedProducts = Object.values(dispatchMap)
+                    .sort((a, b) => b.qtyOut - a.qtyOut)
+                    .slice(0, 5);
+
+                // Critical Low Stock
+                this.criticalLowStock = this.products.filter(p => 
+                    p.status === 'Low Stock' || p.status === 'Out of Stock' || parseInt(p.quantity_in_stock) <= parseInt(p.reorder_level)
+                ).sort((a, b) => parseInt(a.quantity_in_stock) - parseInt(b.quantity_in_stock));
+            },
+
+            formatCurrency(value) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(value);
+            },
+
+            exportPDF() {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    doc.setFontSize(20);
+                    doc.text("Inventory Summary Report", 14, 22);
+                    
+                    doc.setFontSize(11);
+                    doc.text("Generated on: " + new Date().toLocaleString(), 14, 30);
+                    
+                    doc.text("Total Inventory Value: " + this.formatCurrency(this.totalInventoryValue), 14, 40);
+                    doc.text("Stock Received This Month: " + this.stockReceivedThisMonth, 14, 48);
+                    doc.text("Stock Dispatched This Month: " + this.stockDispatchedThisMonth, 14, 56);
+                    
+                    // Products table
+                    doc.text("All Products", 14, 70);
+                    const tableData = this.products.map(p => [
+                        p.name,
+                        p.sku,
+                        p.category_id?.name || '-',
+                        p.quantity_in_stock,
+                        p.unit_price,
+                        p.status
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: 75,
+                        head: [['Product Name', 'SKU', 'Category', 'Stock', 'Price', 'Status']],
+                        body: tableData,
+                    });
+                    
+                    doc.save('Inventory_Report.pdf');
+                } catch (error) {
+                    console.error('PDF generation error', error);
+                    alert('Error generating PDF. Please ensure you are online to load the export libraries.');
+                }
+            },
+
+            exportExcel() {
+                try {
+                    // Create worksheet
+                    const wsData = [
+                        ['Inventory Summary Report'],
+                        ['Generated on:', new Date().toLocaleString()],
+                        [],
+                        ['Metric', 'Value'],
+                        ['Total Inventory Value', this.totalInventoryValue],
+                        ['Stock Received This Month', this.stockReceivedThisMonth],
+                        ['Stock Dispatched This Month', this.stockDispatchedThisMonth],
+                        [],
+                        ['Product Name', 'SKU', 'Category', 'Stock', 'Price', 'Status']
+                    ];
+                    
+                    this.products.forEach(p => {
+                        wsData.push([
+                            p.name,
+                            p.sku,
+                            p.category_id?.name || '-',
+                            p.quantity_in_stock,
+                            p.unit_price,
+                            p.status
+                        ]);
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Inventory Report");
+                    
+                    XLSX.writeFile(wb, "Inventory_Report.xlsx");
+                } catch (error) {
+                    console.error('Excel generation error', error);
+                    alert('Error generating Excel. Please ensure you are online to load the export libraries.');
+                }
+            }
+        }));
+    });
+</script>
+
+<!-- Add PDF & Excel export libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+{% endblock %}
